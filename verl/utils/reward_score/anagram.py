@@ -1,4 +1,6 @@
 import re
+import random
+
 
 def extract_solution(solution_str):
     """Extract the guessed state name from the solution string."""
@@ -63,13 +65,15 @@ def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
     
     # Extract the guessed answer
     guess = extract_solution(solution_str=solution_str)
+
+    do_print = random.randint(20) == 1
     
-    # Debug printing (uncomment if needed)
-    # print(f"--------------------------------")
-    # print(f"Scrambled word: {scrambled_word}")
-    # print(f"Target state: {target_state}")
-    # print(f"Extracted guess: {guess}")
-    # print(f"Solution string: {solution_str}")
+    if do_print: 
+        print(f"--------------------------------")
+        print(f"Scrambled word: {scrambled_word}")
+        print(f"Target state: {target_state}")
+        print(f"Extracted guess: {guess}")
+        print(f"Solution string: {solution_str}")
     
     if guess is None:
         return 0
