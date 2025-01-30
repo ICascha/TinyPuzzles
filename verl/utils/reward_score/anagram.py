@@ -66,7 +66,7 @@ def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
     # Extract the guessed answer
     guess = extract_solution(solution_str=solution_str)
 
-    do_print = random.randint(20) == 1
+    do_print = random.randint(0, 20) == 1
     
     if do_print: 
         print(f"--------------------------------")
