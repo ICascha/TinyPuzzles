@@ -26,21 +26,33 @@ def scramble_word(word: str) -> str:
 
 def split_states_for_test(
     us_states: List[str],
-    num_unique_test_states: int = 10,
+    test_ratio: float = 0.2,  # Proportion of states to reserve for testing
     seed_value: int = 42
 ) -> Dict[str, List[str]]:
-    """Split states into training and test sets, with some states reserved for testing."""
+    """Split states into completely separate training and test sets.
+    
+    Args:
+        us_states: List of all US state names
+        test_ratio: Proportion of states to use for testing (default 0.2 = 20%)
+        seed_value: Random seed for reproducibility
+    
+    Returns:
+        Dictionary containing separate train and test state lists
+    """
     seed(seed_value)
     
-    # Randomly select states that will only appear in test set
-    unique_test_states = sample(us_states, num_unique_test_states)
+    # Calculate number of states for test set
+    num_test_states = int(len(us_states) * test_ratio)
     
-    # Remaining states can appear in both training and test
-    shared_states = [state for state in us_states if state not in unique_test_states]
+    # Randomly select states for test set
+    test_states = sample(us_states, num_test_states)
+    
+    # Remaining states go to train set
+    train_states = [state for state in us_states if state not in test_states]
     
     return {
-        'unique_test': unique_test_states,
-        'shared': shared_states
+        'train': train_states,
+        'test': test_states
     }
 
 
@@ -48,16 +60,14 @@ def gen_dataset(
     state_splits: Dict[str, List[str]],
     num_train_samples: int,
     num_test_samples: int,
-    test_unique_ratio: float = 0.3,  # Percentage of test samples that should use unique states
     seed_value: int = 42,
 ) -> Dict[str, List[Tuple]]:
-    """Generate dataset for anagram task with unique test states.
+    """Generate dataset for anagram task with completely separate train/test states.
     
     Args:
-        state_splits: Dictionary containing 'unique_test' and 'shared' state lists
+        state_splits: Dictionary containing separate 'train' and 'test' state lists
         num_train_samples: Number of training samples to generate
         num_test_samples: Number of test samples to generate
-        test_unique_ratio: Ratio of test samples that should use unique test states
         seed_value: Random seed for reproducibility
         
     Returns:
@@ -67,25 +77,15 @@ def gen_dataset(
     train_samples = []
     test_samples = []
     
-    # Generate training samples (only from shared states)
+    # Generate training samples (only from train states)
     for _ in tqdm(range(num_train_samples), desc="Generating training samples"):
-        target_state = choice(state_splits['shared'])
+        target_state = choice(state_splits['train'])
         scrambled = scramble_word(target_state)
         train_samples.append((scrambled, target_state))
     
-    # Calculate number of unique state test samples
-    num_unique_test = int(num_test_samples * test_unique_ratio)
-    num_shared_test = num_test_samples - num_unique_test
-    
-    # Generate test samples from unique states
-    for _ in tqdm(range(num_unique_test), desc="Generating unique test samples"):
-        target_state = choice(state_splits['unique_test'])
-        scrambled = scramble_word(target_state)
-        test_samples.append((scrambled, target_state))
-    
-    # Generate remaining test samples from shared states
-    for _ in tqdm(range(num_shared_test), desc="Generating shared test samples"):
-        target_state = choice(state_splits['shared'])
+    # Generate test samples (only from test states)
+    for _ in tqdm(range(num_test_samples), desc="Generating test samples"):
+        target_state = choice(state_splits['test'])
         scrambled = scramble_word(target_state)
         test_samples.append((scrambled, target_state))
     
@@ -116,20 +116,20 @@ if __name__ == '__main__':
     parser.add_argument('--hdfs_dir', default=None)
     parser.add_argument('--train_size', type=int, default=327680)
     parser.add_argument('--test_size', type=int, default=1024)
-    parser.add_argument('--num_unique_test_states', type=int, default=10)
-    parser.add_argument('--test_unique_ratio', type=float, default=0.3)
+    parser.add_argument('--test_ratio', type=float, default=0.2)
     parser.add_argument('--template_type', type=str, default='base')
     parser.add_argument('--seed', type=int, default=42)
 
     args = parser.parse_args()
 
     # List of US states
-    US_STATES = ["Alaska", "Alabama", "Arkansas", "American Samoa", "Arizona", "California", "Colorado", "Connecticut", "District ", "of Columbia", "Delaware", "Florida", "Georgia", "Guam", "Hawaii", "Iowa", "Idaho", "Illinois", "Indiana", "Kansas", "Kentucky", "Louisiana", "Massachusetts", "Maryland", "Maine", "Michigan", "Minnesota", "Missouri", "Mississippi", "Montana", "North Carolina", "North Dakota", "Nebraska", "New Hampshire", "New Jersey", "New Mexico", "Nevada", "New York", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Puerto Rico", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Virginia", "Virgin Islands", "Vermont", "Washington", "Wisconsin", "West Virginia", "Wyoming"]
+    # Wikipedia sourced
+    US_STATES = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"]
 
     # Split states into training and test sets
     state_splits = split_states_for_test(
         US_STATES,
-        num_unique_test_states=args.num_unique_test_states,
+        test_ratio=args.test_ratio,
         seed_value=args.seed
     )
 
@@ -138,7 +138,6 @@ if __name__ == '__main__':
         state_splits,
         num_train_samples=args.train_size,
         num_test_samples=args.test_size,
-        test_unique_ratio=args.test_unique_ratio,
         seed_value=args.seed
     )
     
