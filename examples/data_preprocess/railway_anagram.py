@@ -1,6 +1,6 @@
 """
-Preprocess dataset for anagram task - given a scrambled US state name, unscramble it to find the original state.
-Ensures test set contains some unique states not seen in training.
+Preprocess dataset for anagram task - given a scrambled Dutch railway station name, unscramble it to find the original station.
+Ensures test set contains some unique station names not seen in training.
 """
 
 import re
@@ -24,31 +24,31 @@ def scramble_word(word: str) -> str:
             return scrambled
 
 
-def split_states_for_test(
-    us_states: List[str],
-    test_ratio: float = 0.2,  # Proportion of states to reserve for testing
+def split_stations_for_test(
+    stations: List[str],
+    test_ratio: float = 0.2,  # Proportion of stations to reserve for testing
     seed_value: int = 42
 ) -> Dict[str, List[str]]:
-    """Split states into completely separate training and test sets.
+    """Split stations into completely separate training and test sets.
     
     Args:
-        us_states: List of all US state names
-        test_ratio: Proportion of states to use for testing (default 0.2 = 20%)
+        stations: List of all Dutch railway station names
+        test_ratio: Proportion of stations to use for testing (default 0.2 = 20%)
         seed_value: Random seed for reproducibility
     
     Returns:
-        Dictionary containing separate train and test state lists
+        Dictionary containing separate train and test station lists
     """
     seed(seed_value)
     
-    # Calculate number of states for test set
-    num_test_states = int(len(us_states) * test_ratio)
+    # Calculate number of stations for test set
+    num_test_stations = int(len(stations) * test_ratio)
     
-    # Randomly select states for test set
-    test_states = sample(us_states, num_test_states)
+    # Randomly select stations for test set
+    test_stations = sample(stations, num_test_stations)
     
-    # Remaining states go to train set
-    train_states = [state for state in us_states if state not in test_states]
+    # Remaining stations go to train set
+    train_stations = [station for station in stations if station not in test_stations]
     
     return {
         'train': train_states,
@@ -57,15 +57,15 @@ def split_states_for_test(
 
 
 def gen_dataset(
-    state_splits: Dict[str, List[str]],
+    station_splits: Dict[str, List[str]],
     num_train_samples: int,
     num_test_samples: int,
     seed_value: int = 42,
 ) -> Dict[str, List[Tuple]]:
-    """Generate dataset for anagram task with completely separate train/test states.
+    """Generate dataset for anagram task with completely separate train/test stations.
     
     Args:
-        state_splits: Dictionary containing separate 'train' and 'test' state lists
+        station_splits: Dictionary containing separate 'train' and 'test' station lists
         num_train_samples: Number of training samples to generate
         num_test_samples: Number of test samples to generate
         seed_value: Random seed for reproducibility
@@ -77,17 +77,17 @@ def gen_dataset(
     train_samples = []
     test_samples = []
     
-    # Generate training samples (only from train states)
+    # Generate training samples (only from train stations)
     for _ in tqdm(range(num_train_samples), desc="Generating training samples"):
-        target_state = choice(state_splits['train'])
-        scrambled = scramble_word(target_state)
-        train_samples.append((scrambled, target_state))
+        target_station = choice(station_splits['train'])
+        scrambled = scramble_word(target_station)
+        train_samples.append((scrambled, target_station))
     
-    # Generate test samples (only from test states)
+    # Generate test samples (only from test stations)
     for _ in tqdm(range(num_test_samples), desc="Generating test samples"):
-        target_state = choice(state_splits['test'])
-        scrambled = scramble_word(target_state)
-        test_samples.append((scrambled, target_state))
+        target_station = choice(station_splits['test'])
+        scrambled = scramble_word(target_station)
+        test_samples.append((scrambled, target_station))
     
     return {
         'train': train_samples,
@@ -101,12 +101,12 @@ def make_prefix(dp, template_type):
     if template_type == 'base':
         """This works for any base model"""
         prefix = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer.
-User: Unscramble this US state name: {scrambled_word}. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer>California</answer>.
+User: Unscramble this Dutch railway station name: {scrambled_word}. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer>Amsterdam Centraal</answer>.
 Assistant: Let me solve this step by step.
 <think>"""
     elif template_type == 'qwen-instruct':
         """This works for Qwen Instruct Models"""
-        prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first thinks about the reasoning process in the mind and then provides the user with the answer.<|im_end|>\n<|im_start|>user\nUnscramble this US state name: {scrambled_word}. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer>California</answer>.<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
+        prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first thinks about the reasoning process in the mind and then provides the user with the answer.<|im_end|>\n<|im_start|>user\nUnscramble this Dutch railway station name: {scrambled_word}. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer>Amsterdam Centraal</answer>.<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
     return prefix
 
 
@@ -122,20 +122,20 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # List of US states
-    # Wikipedia sourced
-    US_STATES = ["Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"]
+    # Load Dutch railway stations from file
+    with open('data/dutch_railway_stations.txt', 'r') as f:
+        STATIONS = [line.strip() for line in f.readlines()]
 
-    # Split states into training and test sets
-    state_splits = split_states_for_test(
-        US_STATES,
+    # Split stations into training and test sets
+    station_splits = split_stations_for_test(
+        STATIONS,
         test_ratio=args.test_ratio,
         seed_value=args.seed
     )
 
     # Generate datasets
     datasets = gen_dataset(
-        state_splits,
+        station_splits,
         num_train_samples=args.train_size,
         num_test_samples=args.test_size,
         seed_value=args.seed
@@ -146,12 +146,12 @@ if __name__ == '__main__':
     # Convert to datasets
     train_dict = {
         'scrambled_word': [sample[0] for sample in datasets['train']],
-        'target_state': [sample[1] for sample in datasets['train']]
+        'target_station': [sample[1] for sample in datasets['train']]
     }
     
     test_dict = {
         'scrambled_word': [sample[0] for sample in datasets['test']],
-        'target_state': [sample[1] for sample in datasets['test']]
+        'target_station': [sample[1] for sample in datasets['test']]
     }
     
     train_dataset = Dataset.from_dict(train_dict)
@@ -162,8 +162,8 @@ if __name__ == '__main__':
             question = make_prefix(example, template_type=args.template_type)
             solution = {
                 "scrambled_word": example['scrambled_word'],
-                "target_state": example['target_state'],
-                "us_states": US_STATES
+                "target_station": example['target_station'],
+                "stations": STATIONS
             }
             data = {
                 "data_source": data_source,
@@ -191,17 +191,17 @@ if __name__ == '__main__':
     hdfs_dir = args.hdfs_dir
 
     # Print statistics about the datasets
-    unique_train_states = set(train_dict['target_state'])
-    unique_test_states = set(test_dict['target_state'])
-    test_only_states = unique_test_states - unique_train_states
+    unique_train_stations = set(train_dict['target_station'])
+    unique_test_stations = set(test_dict['target_station'])
+    test_only_stations = unique_test_stations - unique_train_stations
     
     print("\nDataset Statistics:")
     print(f"Total training samples: {len(train_dataset)}")
     print(f"Total test samples: {len(test_dataset)}")
-    print(f"Unique states in training: {len(unique_train_states)}")
-    print(f"Unique states in test: {len(unique_test_states)}")
-    print(f"States that appear only in test: {len(test_only_states)}")
-    print("Test-only states:", sorted(list(test_only_states)))
+    print(f"Unique stations in training: {len(unique_train_stations)}")
+    print(f"Unique stations in test: {len(unique_test_stations)}")
+    print(f"Stations that appear only in test: {len(test_only_stations)}")
+    print("Test-only stations:", sorted(list(test_only_stations)))
 
     # Save datasets
     os.makedirs(local_dir, exist_ok=True)
