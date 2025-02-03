@@ -30,10 +30,10 @@ def _select_rm_score_fn(data_source):
         return multiply.compute_score
     elif "countdown" in data_source:
         return countdown.compute_score
-    elif "anagram" in data_source:
-        return anagram.compute_score  # Added our new anagram scorer
     elif "railway_anagram" in data_source:
         return dutch_railway_anagram.compute_score
+    elif "anagram" in data_source:
+        return anagram.compute_score  # Added our new anagram scorer
     else:
         raise NotImplementedError
 

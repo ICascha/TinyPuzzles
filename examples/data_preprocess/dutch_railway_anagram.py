@@ -109,6 +109,14 @@ Assistant: Let me solve this step by step.
     elif template_type == 'qwen-instruct':
         """This works for Qwen Instruct Models"""
         prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first thinks about the reasoning process in the mind and then provides the user with the answer.<|im_end|>\n<|im_start|>user\nUnscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "acmmalanderstetra", the answer would be <answer>Amsterdam Centraal</answer>.<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
+    
+    # format found at: https://build.nvidia.com/nvidia/mistral-nemo-minitron-8b-8k-instruct/modelcard
+    elif template_type == 'nemo-instruct':
+        """This works for Nemo Instruct Models"""
+        system_prompt = "You are a helpful assistant. You first think about the reasoning process in the mind and then provide the user with the answer."
+        user_prompt = f"""Unscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "acmmalanderstetra", the answer would be <answer>Amsterdam Centraal</answer>."""
+        prefix = f"""<extra_id_0>{system_prompt}<extra_id_1>User {user_prompt}<extra_id_1>Assistant\nLet me solve this step by step.\n<think>"""
+    
     return prefix
 
 
