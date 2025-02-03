@@ -39,13 +39,6 @@ def is_valid_station(guess, stations):
     normalized_stations = [normalize_station_name(station) for station in stations]
     return normalized_guess in normalized_stations
 
-def is_valid_anagram(guess, scrambled_word):
-    """Check if the guess is a valid anagram of the scrambled word."""
-    if guess is None or scrambled_word is None:
-        return False
-    normalized_guess = normalize_station_name(guess)
-    normalized_scrambled = normalize_station_name(scrambled_word)
-    return sorted(normalized_guess) == sorted(normalized_scrambled)
 
 def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
     """Score the anagram solution.
@@ -82,17 +75,13 @@ def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
     normalized_guess = normalize_station_name(guess)
     normalized_target = normalize_station_name(target_station)
     
-    # First check if it's a valid station name
+    # Check if it's a valid station name
     if not is_valid_station(guess, stations):
         return 0
     
-    # Then check if it's the correct anagram
-    if not is_valid_anagram(guess, scrambled_word):
-        return format_score
-    
-    # Finally check if it's the correct station
+    # Check if it's the correct station
     if normalized_guess == normalized_target:
         return score
     
-    # If it's a valid anagram but wrong station, give partial credit
+    # If it's a valid station but not the target, give partial credit
     return format_score
