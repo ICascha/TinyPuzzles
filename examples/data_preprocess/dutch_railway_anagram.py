@@ -14,13 +14,15 @@ import argparse
 
 
 def scramble_word(word: str) -> str:
-    """Scramble a word while ensuring it's different from the original."""
+    """Scramble a word while ensuring it's different from the original.
+    Spaces are removed from both input and output."""
     word = word.lower().strip()
-    word_list = list(word.replace(" ", ""))
+    word_no_spaces = word.replace(" ", "")
+    word_list = list(word_no_spaces)
     while True:
         shuffle(word_list)
         scrambled = ''.join(word_list)
-        if scrambled != word.replace(" ", ""):
+        if scrambled != word_no_spaces:
             return scrambled
 
 
@@ -101,12 +103,12 @@ def make_prefix(dp, template_type):
     if template_type == 'base':
         """This works for any base model"""
         prefix = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer.
-User: Unscramble this Dutch railway station name: {scrambled_word}. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer>Amsterdam Centraal</answer>.
+User: Unscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "damstermcntraal", the answer would be <answer>Amsterdam Centraal</answer>.
 Assistant: Let me solve this step by step.
 <think>"""
     elif template_type == 'qwen-instruct':
         """This works for Qwen Instruct Models"""
-        prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first thinks about the reasoning process in the mind and then provides the user with the answer.<|im_end|>\n<|im_start|>user\nUnscramble this Dutch railway station name: {scrambled_word}. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example <answer>Amsterdam Centraal</answer>.<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
+        prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first thinks about the reasoning process in the mind and then provides the user with the answer.<|im_end|>\n<|im_start|>user\nUnscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "damstermcntraal", the answer would be <answer>Amsterdam Centraal</answer>.<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
     return prefix
 
 
