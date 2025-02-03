@@ -17,7 +17,7 @@ Note that we don't combine the main with ray_trainer as ray_trainer is used by o
 
 from verl import DataProto
 import torch
-from verl.utils.reward_score import gsm8k, math, multiply, countdown, anagram
+from verl.utils.reward_score import gsm8k, math, multiply, countdown, anagram, dutch_railway_anagram
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 
 
@@ -32,6 +32,8 @@ def _select_rm_score_fn(data_source):
         return countdown.compute_score
     elif "anagram" in data_source:
         return anagram.compute_score  # Added our new anagram scorer
+    elif "railway_anagram" in data_source:
+        return dutch_railway_anagram.compute_score
     else:
         raise NotImplementedError
 

@@ -103,18 +103,18 @@ def make_prefix(dp, template_type):
     if template_type == 'base':
         """This works for any base model"""
         prefix = f"""A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant first thinks about the reasoning process in the mind and then provides the user with the answer.
-User: Unscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "damstermcntraal", the answer would be <answer>Amsterdam Centraal</answer>.
+User: Unscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "acmmalanderstetra", the answer would be <answer>Amsterdam Centraal</answer>.
 Assistant: Let me solve this step by step.
 <think>"""
     elif template_type == 'qwen-instruct':
         """This works for Qwen Instruct Models"""
-        prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first thinks about the reasoning process in the mind and then provides the user with the answer.<|im_end|>\n<|im_start|>user\nUnscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "damstermcntraal", the answer would be <answer>Amsterdam Centraal</answer>.<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
+        prefix = f"""<|im_start|>system\nYou are a helpful assistant. You first thinks about the reasoning process in the mind and then provides the user with the answer.<|im_end|>\n<|im_start|>user\nUnscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "acmmalanderstetra", the answer would be <answer>Amsterdam Centraal</answer>.<|im_end|>\n<|im_start|>assistant\nLet me solve this step by step.\n<think>"""
     return prefix
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--local_dir', default='~/data/anagram')
+    parser.add_argument('--local_dir', default='~/data/railway_anagram')
     parser.add_argument('--hdfs_dir', default=None)
     parser.add_argument('--train_size', type=int, default=327680)
     parser.add_argument('--test_size', type=int, default=1024)
@@ -143,7 +143,7 @@ if __name__ == '__main__':
         seed_value=args.seed
     )
     
-    data_source = 'anagram'
+    data_source = 'railway_anagram'
 
     # Convert to datasets
     train_dict = {
