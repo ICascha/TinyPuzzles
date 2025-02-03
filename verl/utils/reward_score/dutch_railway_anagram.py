@@ -3,7 +3,7 @@ import random
 
 
 def extract_solution(solution_str):
-    """Extract the guessed state name from the solution string."""
+    """Extract the guessed station name from the solution string."""
     # Remove everything before the first "Assistant:"
     if "Assistant:" in solution_str:
         solution_str = solution_str.split("Assistant:", 1)[1]
@@ -25,19 +25,19 @@ def extract_solution(solution_str):
         final_answer = None
     return final_answer
 
-def normalize_state_name(state_name):
-    """Normalize state name for comparison by removing spaces and converting to lowercase."""
-    if state_name is None:
+def normalize_station_name(station_name):
+    """Normalize station name for comparison by removing spaces and converting to lowercase."""
+    if station_name is None:
         return None
-    return ''.join(state_name.lower().split())
+    return ''.join(station_name.lower().split())
 
-def is_valid_state(guess, us_states):
-    """Check if the guessed state name is in the list of US states."""
+def is_valid_station(guess, stations):
+    """Check if the guessed station name is in the list of Dutch railway stations."""
     if guess is None:
         return False
-    normalized_guess = normalize_state_name(guess)
-    normalized_states = [normalize_state_name(state) for state in us_states]
-    return normalized_guess in normalized_states
+    normalized_guess = normalize_station_name(guess)
+    normalized_stations = [normalize_station_name(station) for station in stations]
+    return normalized_guess in normalized_stations
 
 def is_valid_anagram(guess, scrambled_word):
     """Check if the guess is a valid anagram of the scrambled word."""
@@ -51,17 +51,17 @@ def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
     """Score the anagram solution.
     
     Args:
-        solution_str: the solution text containing the guessed state name
-        ground_truth: dictionary containing scrambled_word and target_state
-        format_score: score for guessing any valid state name (default 0.1)
+        solution_str: the solution text containing the guessed station name
+        ground_truth: dictionary containing scrambled_word and target_station
+        format_score: score for guessing any valid station name (default 0.1)
         score: score for correct answer (default 1.0)
     
     Returns:
         float: Score based on the correctness of the answer
     """
     scrambled_word = ground_truth['scrambled_word']
-    target_state = ground_truth['target_state']
-    us_states = ground_truth['us_states']  # List of valid US state names
+    target_station = ground_truth['target_station']
+    stations = ground_truth['stations']  # List of valid Dutch railway station names
     
     # Extract the guessed answer
     guess = extract_solution(solution_str=solution_str)
@@ -71,7 +71,7 @@ def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
     if do_print: 
         print(f"--------------------------------")
         print(f"Scrambled word: {scrambled_word}")
-        print(f"Target state: {target_state}")
+        print(f"Target station: {target_station}")
         print(f"Extracted guess: {guess}")
         print(f"Solution string: {solution_str}")
     
@@ -79,20 +79,20 @@ def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
         return 0
     
     # Normalize the guess and target for comparison
-    normalized_guess = normalize_state_name(guess)
-    normalized_target = normalize_state_name(target_state)
+    normalized_guess = normalize_station_name(guess)
+    normalized_target = normalize_station_name(target_station)
     
-    # First check if it's a valid state name
-    if not is_valid_state(guess, us_states):
+    # First check if it's a valid station name
+    if not is_valid_station(guess, stations):
         return 0
     
     # Then check if it's the correct anagram
     if not is_valid_anagram(guess, scrambled_word):
         return format_score
     
-    # Finally check if it's the correct state
+    # Finally check if it's the correct station
     if normalized_guess == normalized_target:
         return score
     
-    # If it's a valid anagram but wrong state, give partial credit
+    # If it's a valid anagram but wrong station, give partial credit
     return format_score
