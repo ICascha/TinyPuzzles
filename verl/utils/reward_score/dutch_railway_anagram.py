@@ -43,8 +43,8 @@ def is_valid_anagram(guess, scrambled_word):
     """Check if the guess is a valid anagram of the scrambled word."""
     if guess is None or scrambled_word is None:
         return False
-    normalized_guess = normalize_state_name(guess)
-    normalized_scrambled = normalize_state_name(scrambled_word)
+    normalized_guess = normalize_station_name(guess)
+    normalized_scrambled = normalize_station_name(scrambled_word)
     return sorted(normalized_guess) == sorted(normalized_scrambled)
 
 def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
