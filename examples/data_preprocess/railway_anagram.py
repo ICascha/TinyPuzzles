@@ -51,8 +51,8 @@ def split_stations_for_test(
     train_stations = [station for station in stations if station not in test_stations]
     
     return {
-        'train': train_states,
-        'test': test_states
+        'train': train_stations,
+        'test': test_stations
     }
 
 
