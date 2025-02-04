@@ -114,8 +114,18 @@ Assistant: Let me solve this step by step.
     elif template_type == 'nemo-instruct':
         """This works for Nemo Instruct Models"""
         system_prompt = "You are a helpful assistant. You first think about the reasoning process in the mind and then provide the user with the answer."
-        user_prompt = f"""Unscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "acmmalanderstetra", the answer would be <answer>Amsterdam Centraal</answer>."""
+        user_prompt = f"""Unscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, followed by </s>, for example if the scrambled word was "acmmalanderstetra", the answer would be <answer>Amsterdam Centraal</answer> </s>."""
         prefix = f"""<extra_id_0>{system_prompt}<extra_id_1>User {user_prompt}<extra_id_1>Assistant\nLet me solve this step by step.\n<think>"""
+        
+    elif template_type == 'llama-instruct':
+        prefix = f'''<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+Cutting Knowledge Date: December 2023
+Today Date: 26 Jul 2024
+
+You are a helpful assistant. You first think about the reasoning process in the mind and then provide the user with the answer.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+Unscramble this Dutch railway station name: {scrambled_word}. Note that any spaces from the original station name have been removed. Show your work in <think> </think> tags. And return the final answer in <answer> </answer> tags, for example if the scrambled word was "acmmalanderstetra", the answer would be <answer>Amsterdam Centraal</answer>.<|eot_id|>'''
     
     return prefix
 

@@ -9,6 +9,13 @@ def extract_solution(solution_str):
         solution_str = solution_str.split("Assistant:", 1)[1]
     elif "<|im_start|>assistant" in solution_str:
         solution_str = solution_str.split("<|im_start|>assistant", 1)[1]
+    elif "assistant<|end_header_id|>" in solution_str:
+        # llama-instruct format
+        solution_str = solution_str.split("assistant<|end_header_id|>", 1)[1]
+    elif "<extra_id_1>Assistant" in solution_str:
+        # nemo-instruct format
+        solution_str = solution_str.split("<extra_id_1>Assistant", 1)[1]
+        
     else:
         return None
 
