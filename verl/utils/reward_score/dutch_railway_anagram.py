@@ -105,12 +105,12 @@ def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
     # If it's a valid anagram but wrong station, give partial credit
     return format_score
 
-def levenshtein_ratio(s1: str, s2: str, distance: float) -> float:
+def levenshtein_ratio(s1: str, s2: str, distance_val: float) -> float:
     """Calculate the similarity ratio between two strings."""
     max_length = max(len(s1), len(s2))
     if max_length == 0:
         return 1.0
-    return 1 - (distance / max_length)
+    return 1 - (distance_val / max_length)
 
 def compute_metrics(solution_str, ground_truth):
     """Compute metrics for the anagram solution.
@@ -145,9 +145,9 @@ def compute_metrics(solution_str, ground_truth):
     # Compute the length of the target
     target_length = len(normalized_target)
     # Compute Levenshtein distance
-    distance = distance(normalized_guess, normalized_target)
+    distance_val = distance(normalized_guess, normalized_target)
     # Compute normalized ratio
-    distance_ratio = levenshtein_ratio(normalized_guess, normalized_target, distance)
+    distance_ratio = levenshtein_ratio(normalized_guess, normalized_target, distance_val)
     # Compute length difference
     length_difference = abs(len(normalized_guess) - len(normalized_target))
     # Compute relative length difference
@@ -160,7 +160,7 @@ def compute_metrics(solution_str, ground_truth):
         'correct_station': float(correct_station),
         'guess_length': float(guess_length),
         'target_length': float(target_length),
-        'distance': float(distance),
+        'distance': float(distance_val),
         'distance_ratio': float(distance_ratio),
         'length_difference': float(length_difference),
         'relative_length_difference': float(relative_length_difference)
