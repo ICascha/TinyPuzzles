@@ -1,5 +1,6 @@
 import re
 import random
+from Levenshtein import distance
 
 
 def extract_solution(solution_str):
@@ -104,28 +105,8 @@ def compute_score(solution_str, ground_truth, format_score=0.1, score=1.0):
     # If it's a valid anagram but wrong station, give partial credit
     return format_score
 
-def levenshtein_distance(s1: str, s2: str) -> int:
-    if len(s1) < len(s2):
-        return levenshtein_distance(s2, s1)
-
-    if len(s2) == 0:
-        return len(s1)
-
-    previous_row = range(len(s2) + 1)
-    for i, c1 in enumerate(s1):
-        current_row = [i + 1]
-        for j, c2 in enumerate(s2):
-            insertions = previous_row[j + 1] + 1
-            deletions = current_row[j] + 1
-            substitutions = previous_row[j] + (c1 != c2)
-            current_row.append(min(insertions, deletions, substitutions))
-        previous_row = current_row
-
-    return previous_row[-1]
-
-def levenshtein_ratio(s1: str, s2: str) -> float:
+def levenshtein_ratio(s1: str, s2: str, distance: float) -> float:
     """Calculate the similarity ratio between two strings."""
-    distance = levenshtein_distance(s1, s2)
     max_length = max(len(s1), len(s2))
     if max_length == 0:
         return 1.0
@@ -147,6 +128,9 @@ def compute_metrics(solution_str, ground_truth):
     
     # Extract the guessed answer
     guess = extract_solution(solution_str=solution_str)
+
+    if guess is None:
+        guess = ""
     
     # Normalize the guess and target for comparison
     normalized_guess = normalize_station_name(guess)
@@ -158,10 +142,12 @@ def compute_metrics(solution_str, ground_truth):
     correct_station = normalized_guess == normalized_target
     # Compute length of the guess
     guess_length = len(normalized_guess)
+    # Compute the length of the target
+    target_length = len(normalized_target)
     # Compute Levenshtein distance
-    distance = levenshtein_distance(normalized_guess, normalized_target)
+    distance = distance(normalized_guess, normalized_target)
     # Compute normalized ratio
-    distance_ratio = levenshtein_ratio(normalized_guess, normalized_target)
+    distance_ratio = levenshtein_ratio(normalized_guess, normalized_target, distance)
     # Compute length difference
     length_difference = abs(len(normalized_guess) - len(normalized_target))
     # Compute relative length difference
@@ -169,14 +155,15 @@ def compute_metrics(solution_str, ground_truth):
     
     # Compute metrics
     metrics = {
-        'valid_station': valid_station,
-        'valid_anagram': valid_anagram,
-        'correct_station': correct_station,
-        'guess_length': guess_length,
-        'distance': distance,
-        'distance_ratio': distance_ratio,
-        'length_difference': length_difference,
-        'relative_length_difference': relative_length_difference
+        'valid_station': float(valid_station),
+        'valid_anagram': float(valid_anagram),
+        'correct_station': float(correct_station),
+        'guess_length': float(guess_length),
+        'target_length': float(target_length),
+        'distance': float(distance),
+        'distance_ratio': float(distance_ratio),
+        'length_difference': float(length_difference),
+        'relative_length_difference': float(relative_length_difference)
     }
     
     return metrics

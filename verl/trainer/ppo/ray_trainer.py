@@ -303,9 +303,9 @@ class RayPPOTrainer(object):
                  ray_worker_group_cls: RayWorkerGroup = RayWorkerGroup,
                  reward_fn=None,
                  val_reward_fn=None,
-                 extra_metric_fn=None):
+                 extra_metrics_fn=None):
         
-        self.extra_metric_fn = extra_metric_fn
+        self.extra_metrics_fn = extra_metrics_fn
 
         # assert torch.cuda.is_available(), 'cuda must be available on driver'
 
@@ -424,6 +424,10 @@ class RayPPOTrainer(object):
             # evaluate using reward_function
             # for certain reward function (e.g. sandbox), the generation can overlap with reward
             reward_tensor = self.val_reward_fn(test_batch)
+            
+            extra_metrics = self.extra_metrics_fn(test_batch)
+            extra_metrics_data, extra_metrics_data_grouped = self.log_extra_metrics(extra_metrics, None, val=True)
+
 
             reward_tensor_lst.append(reward_tensor)
             data_source_lst.append(test_batch.non_tensor_batch.get('data_source', ['unknown'] * reward_tensor.shape[0]))
@@ -442,7 +446,7 @@ class RayPPOTrainer(object):
         for data_source, rewards in data_source_reward.items():
             metric_dict[f'val/test_score/{data_source}'] = np.mean(rewards)
 
-        return metric_dict
+        return metric_dict, extra_metrics_data, extra_metrics_data_grouped
 
     def init_workers(self):
         """Init resource pool and worker group"""
@@ -566,9 +570,11 @@ class RayPPOTrainer(object):
         # perform validation before training
         # currently, we only support validation using the reward_function.
         if self.val_reward_fn is not None and self.config.trainer.get('val_before_train', True):
-            val_metrics = self._validate()
+            val_metrics, extra_metrics_data, extra_metrics_data_grouped = self._validate()
             pprint(f'Initial validation metrics: {val_metrics}')
             logger.log(data=val_metrics, step=self.global_steps)
+            logger.log(data=extra_metrics_data, step=self.global_steps)
+            logger.log(data=extra_metrics_data_grouped, step=self.global_steps)
             if self.config.trainer.get('val_only', False):
                 return
 
@@ -628,14 +634,10 @@ class RayPPOTrainer(object):
 
                         # we combine with rule-based rm
                         reward_tensor = self.reward_fn(batch)
-                        print("DEBUG PRINTING COMMENCE")
-                        print(reward_tensor)
-                        extra_metrics = self.extra_metric_fn(batch)
-                        print(extra_metrics)
-                        batch.batch['extra_metrics'] = extra_metrics
-                        print(batch.batch['extra_metrics'])
-                        print("DEBUG PRINTING END")
                         batch.batch['token_level_scores'] = reward_tensor
+                        
+                        extra_metrics = self.extra_metrics_fn(batch)
+                        self.log_extra_metrics(extra_metrics, logger)
 
                         # compute rewards. apply_kl_penalty if available
                         if not self.config.actor_rollout_ref.actor.use_kl_loss:
@@ -672,7 +674,9 @@ class RayPPOTrainer(object):
                     if self.val_reward_fn is not None and self.config.trainer.test_freq > 0 and \
                         self.global_steps % self.config.trainer.test_freq == 0:
                         with _timer('testing', timing_raw):
-                            val_metrics: dict = self._validate()
+                            val_metrics, extra_metrics_data, extra_metrics_data_grouped  = self._validate()
+                            logger.log(data=extra_metrics_data, step=self.global_steps)
+                            logger.log(data=extra_metrics_data_grouped, step=self.global_steps)
                         metrics.update(val_metrics)
 
                     if self.config.trainer.save_freq > 0 and \
@@ -693,7 +697,52 @@ class RayPPOTrainer(object):
 
                     # perform validation after training
                     if self.val_reward_fn is not None:
-                        val_metrics = self._validate()
+                        val_metrics, extra_metrics_data, extra_metrics_data_grouped 
                         pprint(f'Final validation metrics: {val_metrics}')
                         logger.log(data=val_metrics, step=self.global_steps)
+                        logger.log(data=extra_metrics_data, step=self.global_steps)
+                        logger.log(data=extra_metrics_data_grouped, step=self.global_steps)
                     return
+
+    def log_extra_metrics(self, extra_metrics, logger, val=False):
+        
+        extra_metrics_data = {
+        'extra_metrics/valid_station_perc': torch.mean(extra_metrics['valid_station']).detach().item(),
+        'extra_metrics/valid_anagram_perc': torch.mean(extra_metrics['valid_anagram']).detach().item(),
+        'extra_metrics/correct_perc': torch.mean(extra_metrics['correct_station']).detach().item(),
+        }
+        
+        # remove extra_metrics where guess_length is 0
+        extra_metrics = {key: value[extra_metrics['guess_length'] > 0] for key, value in extra_metrics.items()}
+        
+        extra_metrics_data.update({
+        'extra_metrics/avg_guess_len': torch.mean(extra_metrics['guess_length']).detach().item(),
+        'extra_metrics/avg_distance': torch.mean(extra_metrics['distance']).detach().item(),
+        'extra_metrics/avg_distance_normalized': torch.mean(extra_metrics['distance_ratio']).detach().item(),
+        'extra_metrics/avg_len_diff': torch.mean(extra_metrics['length_difference']).detach().item(),
+        'extra_metrics/avg_relative_len_diff': torch.mean(extra_metrics['relative_length_difference']).detach().item()
+        })
+        
+        # groupping metrics (groupby target length)
+        grouped_correctness = {}
+        
+        target_lengths = extra_metrics['target_length']     
+        # for each target length, compute the correct station perc
+        unique_target_lengths = target_lengths.unique()
+        for target_length in unique_target_lengths:
+            target_length_correct_station_perc = torch.mean(extra_metrics['correct_station'][target_lengths == target_length]).detach().item()
+            grouped_correctness[int(target_length.detach().item())] = target_length_correct_station_perc
+                            
+        # add grouped metrics to extra_metrics
+        extra_metrics_data_grouped = {f'grouped_correctness/{target_length}': grouped_correctness[target_length.detach().item()] for target_length in unique_target_lengths}
+        
+        if val:
+            # add val- prefix to extra_metrics_data
+            extra_metrics_data = {f'val-{key}': value for key, value in extra_metrics_data.items()}
+            extra_metrics_data_grouped = {f'val-{key}': value for key, value in extra_metrics_data_grouped.items()}
+            return extra_metrics_data, extra_metrics_data_grouped
+        
+        logger.log(data=extra_metrics_data, step=self.global_steps)
+        logger.log(data=extra_metrics_data_grouped, step=self.global_steps)
+
+        return
