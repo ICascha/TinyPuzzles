@@ -190,6 +190,8 @@ class ExtraMetricsManager:
         # Convert lists to tensors
         for key in batch_metrics:
             if batch_metrics[key]:
+                if key in ['guess', 'target', 'scrambled_word']:
+                    continue
                 batch_metrics[key] = torch.tensor(batch_metrics[key])
             else:
                 batch_metrics[key] = None

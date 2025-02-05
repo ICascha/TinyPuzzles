@@ -35,10 +35,10 @@ from verl.single_controller.ray.base import create_colocated_worker_cls
 from verl.trainer.ppo import core_algos
 from verl.utils.seqlen_balancing import get_seqlen_balanced_partitions, log_seqlen_unbalance
 
+import os
+import pandas as pd
+
 WorkerType = Type[Worker]
-
-output_df = []
-
 
 class Role(Enum):
     """
@@ -308,6 +308,8 @@ class RayPPOTrainer(object):
                  extra_metrics_fn=None):
         
         self.extra_metrics_fn = extra_metrics_fn
+        self.output_df = {'guess': [], 'target': [], 'scrambled_word': []}
+
 
         # assert torch.cuda.is_available(), 'cuda must be available on driver'
 
@@ -707,14 +709,10 @@ class RayPPOTrainer(object):
                     return
 
     def log_extra_metrics(self, extra_metrics, logger, val=False):
-        global output_df
-        # take 'guess', 'target', and 'scrambled_word', and add to output_df
-        # drop from extra_metrics
-        print(extra_metrics['guess'])
-        print(extra_metrics['guess'].detach().cpu().numpy())
-        del extra_metrics['guess']
-        del extra_metrics['target']
-        del extra_metrics['scrambled_word']
+
+        self.output_df['guess'] += extra_metrics.pop('guess')
+        self.output_df['target'] += extra_metrics.pop('target')
+        self.output_df['scrambled_word'] += extra_metrics.pop('scrambled_word')
         
         extra_metrics_data = {
         'extra_metrics/valid_station_perc': torch.mean(extra_metrics['valid_station']).detach().item(),
@@ -744,7 +742,19 @@ class RayPPOTrainer(object):
         for target_length in unique_target_lengths:
             target_length_correct_station_perc = torch.mean(extra_metrics['correct_station'][target_lengths == target_length]).detach().item()
             grouped_correctness[int(target_length.detach().item())] = target_length_correct_station_perc
-                            
+
+        if (self.global_steps % 10 == 0) or val:
+            # output_df is a dict of lists, append this to a csv file called data/guesses.csv
+            # if the csv doesn't exist yet, create it
+            filepath = 'data/guesses.csv'            
+            df = pd.DataFrame.from_dict(self.output_df)
+            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            
+            # Append mode if file exists, write mode if new
+            mode = 'a' if os.path.exists(filepath) else 'w'
+            df.to_csv(filepath, mode=mode, header=(mode == 'w'), index=False)
+            self.output_df = {'guess': [], 'target': [], 'scrambled_word': []}
+
         # add grouped metrics to extra_metrics
         extra_metrics_data_grouped = {f'grouped_correctness/{target_length}': grouped_correctness[target_length.detach().item()] for target_length in unique_target_lengths}
         
@@ -754,9 +764,8 @@ class RayPPOTrainer(object):
             extra_metrics_data_grouped = {f'val-{key}': value for key, value in extra_metrics_data_grouped.items()}
             return extra_metrics_data, extra_metrics_data_grouped
         
+        
         logger.log(data=extra_metrics_data, step=self.global_steps)
         logger.log(data=extra_metrics_data_grouped, step=self.global_steps)
         
-        
-
         return
