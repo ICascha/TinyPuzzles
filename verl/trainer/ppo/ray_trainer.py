@@ -37,6 +37,8 @@ from verl.utils.seqlen_balancing import get_seqlen_balanced_partitions, log_seql
 
 WorkerType = Type[Worker]
 
+output_df = []
+
 
 class Role(Enum):
     """
@@ -705,12 +707,22 @@ class RayPPOTrainer(object):
                     return
 
     def log_extra_metrics(self, extra_metrics, logger, val=False):
+        global output_df
+        # take 'guess', 'target', and 'scrambled_word', and add to output_df
+        # drop from extra_metrics
+        print(extra_metrics['guess'])
+        print(extra_metrics['guess'].detach().cpu().numpy())
+        del extra_metrics['guess']
+        del extra_metrics['target']
+        del extra_metrics['scrambled_word']
         
         extra_metrics_data = {
         'extra_metrics/valid_station_perc': torch.mean(extra_metrics['valid_station']).detach().item(),
         'extra_metrics/valid_anagram_perc': torch.mean(extra_metrics['valid_anagram']).detach().item(),
         'extra_metrics/correct_perc': torch.mean(extra_metrics['correct_station']).detach().item(),
         }
+        
+        
         
         # remove extra_metrics where guess_length is 0
         extra_metrics = {key: value[extra_metrics['guess_length'] > 0] for key, value in extra_metrics.items()}
@@ -744,5 +756,7 @@ class RayPPOTrainer(object):
         
         logger.log(data=extra_metrics_data, step=self.global_steps)
         logger.log(data=extra_metrics_data_grouped, step=self.global_steps)
+        
+        
 
         return

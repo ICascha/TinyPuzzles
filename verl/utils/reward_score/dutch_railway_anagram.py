@@ -163,7 +163,10 @@ def compute_metrics(solution_str, ground_truth):
         'distance': float(distance_val),
         'distance_ratio': float(distance_ratio),
         'length_difference': float(length_difference),
-        'relative_length_difference': float(relative_length_difference)
+        'relative_length_difference': float(relative_length_difference),
+        'guess': guess,
+        'target': target_station,
+        'scrambled_word': scrambled_word,
     }
     
     return metrics

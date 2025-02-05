@@ -135,7 +135,10 @@ class ExtraMetricsManager:
             'distance': [],
             'distance_ratio': [],
             'length_difference': [],
-            'relative_length_difference': []
+            'relative_length_difference': [],
+            'guess': [],
+            'target': [],
+            'scrambled_word': []
         }
         
         already_print_data_sources = {}
