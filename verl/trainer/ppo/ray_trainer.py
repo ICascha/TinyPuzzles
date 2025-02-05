@@ -302,7 +302,10 @@ class RayPPOTrainer(object):
                  resource_pool_manager: ResourcePoolManager,
                  ray_worker_group_cls: RayWorkerGroup = RayWorkerGroup,
                  reward_fn=None,
-                 val_reward_fn=None):
+                 val_reward_fn=None,
+                 extra_metric_fn=None):
+        
+        self.extra_metric_fn = extra_metric_fn
 
         # assert torch.cuda.is_available(), 'cuda must be available on driver'
 
@@ -625,6 +628,13 @@ class RayPPOTrainer(object):
 
                         # we combine with rule-based rm
                         reward_tensor = self.reward_fn(batch)
+                        print("DEBUG PRINTING COMMENCE")
+                        print(reward_tensor)
+                        extra_metrics = self.extra_metric_fn(batch)
+                        print(extra_metrics)
+                        batch.batch['extra_metrics'] = extra_metrics
+                        print(batch.batch['extra_metrics'])
+                        print("DEBUG PRINTING END")
                         batch.batch['token_level_scores'] = reward_tensor
 
                         # compute rewards. apply_kl_penalty if available

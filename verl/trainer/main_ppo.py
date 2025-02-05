@@ -188,7 +188,9 @@ def main_task(config):
                             resource_pool_manager=resource_pool_manager,
                             ray_worker_group_cls=ray_worker_group_cls,
                             reward_fn=reward_fn,
-                            val_reward_fn=val_reward_fn)
+                            val_reward_fn=val_reward_fn,
+                            extra_metric_fn=dutch_railway_anagram.compute_metrics)
+    
     trainer.init_workers()
     trainer.fit()
 
