@@ -1,0 +1,122 @@
+Artichoke
+Asparagus
+Broccoflower
+Broccoli
+Brussels sprouts
+Cabbage
+Kohlrabi
+Savoy cabbage
+Red cabbage
+Sour cabbage
+Cauliflower
+Celery
+Chicory
+Cilantro
+Coriander
+Eggplant
+Endive
+Fiddleheads
+Frisee
+Fennel
+Greens
+Arugula
+Beet greens
+Bok choy
+Chard
+Collard greens
+Kale
+Lettuce
+Mustard greens
+Spinach
+Alfalfa sprouts
+Beans
+Azuki beans
+Sprouting
+Black bean
+Black-eyed peas
+Borlotti bean
+Fava bean
+Chickpea
+Green bean
+Kidney bean
+Lentil
+Lima bean
+Mung bean
+Navy bean
+Peanut
+Pinto bean
+Runner bean
+Split peas
+Soy bean
+Pea
+Mange tout
+Mushrooms
+Nettle
+New Zealand spinach
+Oca
+Okra
+Onion sprouts
+Chives
+Garlic
+Leek
+Onion
+Shallot
+Scallion
+Pepper
+Bell pepper
+Chili pepper
+Jalapeño
+Habanero
+Paprika
+Tabasco pepper
+Cayenne pepper
+Radicchio
+Rhubarb
+Root vegetable
+Beetroot
+Mangelwurzel
+Carrot
+Celeriac
+Corm
+Eddoe
+Konjac
+Taro
+Water chestnut
+Ginger
+Parsnip
+Rutabaga
+Radish
+Wasabi
+Horseradish
+Daikon
+Turnip
+Tuber
+Pachyrhizus erosus
+Jerusalem artichoke
+Kumara
+Potato
+Sour yam
+Sweet potato
+Sweet yam
+Yam
+Salsify
+Skirret
+Succotash
+Sweetcorn
+Squash
+Acorn squash
+Momordica charantia
+Butternut squash
+Banana squash
+Courgette
+Cucumber
+Delicata
+Gem squash
+Hubbard squash
+Squash
+Spaghetti squash
+Tat soi
+Tomatillo
+Tomato
+Topinambur
+Watercress
