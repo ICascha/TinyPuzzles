@@ -82,7 +82,14 @@ def make_prefix(dp, category_name: str) -> str:
     scrambled_word = dp['scrambled_word']
     category_desc = CATEGORY_DESCRIPTIONS[category_name]
     
-    return f"""The following scrambled characters make up the letters of {category_desc} (like an anagram): "{scrambled_word}". Spaces have been added between the scrambled letters for improved legibility, but any spaces in the original name have been removed. Show your reasoning in <think> </think> tags. Once you have thought about it, put your answer between <answer> and </answer> tags."""
+    return f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+
+Cutting Knowledge Date: December 2023
+Today Date: 26 Jul 2024
+
+You are a helpful assistant. You first think about the reasoning process out loud and then provide the user with the answer.<|eot_id|><|start_header_id|>user<|end_header_id|>
+
+The following scrambled characters make up the letters of {category_desc} (like an anagram): "{scrambled_word}". Spaces have been added between the scrambled letters for improved legibility, but any spaces in the original name have been removed. Show your reasoning in <think> </think> tags. Once you have thought about it, put your answer between <answer> and </answer> tags."""
 
 def gen_dataset(
     word_splits: Dict[str, List[str]],
