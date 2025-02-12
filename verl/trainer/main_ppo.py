@@ -97,7 +97,9 @@ class RewardManager():
     
 def _select_metrics_fn(data_source):
     """Select the appropriate metrics computation function based on data source."""
-    if "railway_anagram" in data_source:
+    if "anagram_" in data_source:
+        return general_anagram.compute_metrics
+    elif "railway_anagram" in data_source:
         return dutch_railway_anagram.compute_metrics
     else:
         return None  # For other data sources, we can add their metric functions later
@@ -129,9 +131,9 @@ class ExtraMetricsManager:
             dict: Dictionary containing computed metrics for the batch
         """
         batch_metrics = {
-            'valid_station': [],
+            'valid_word': [],
             'valid_anagram': [],
-            'correct_station': [],
+            'correct_word': [],
             'guess_length': [],
             'target_length': [],
             'distance': [],

@@ -715,9 +715,9 @@ class RayPPOTrainer(object):
         self.output_df['scrambled_word'] += extra_metrics.pop('scrambled_word')
         
         extra_metrics_data = {
-        'extra_metrics/valid_station_perc': torch.mean(extra_metrics['valid_station']).detach().item(),
+        'extra_metrics/valid_word_perc': torch.mean(extra_metrics['valid_word']).detach().item(),
         'extra_metrics/valid_anagram_perc': torch.mean(extra_metrics['valid_anagram']).detach().item(),
-        'extra_metrics/correct_perc': torch.mean(extra_metrics['correct_station']).detach().item(),
+        'extra_metrics/correct_perc': torch.mean(extra_metrics['correct_word']).detach().item(),
         }
         
         
@@ -737,11 +737,11 @@ class RayPPOTrainer(object):
         grouped_correctness = {}
         
         target_lengths = extra_metrics['target_length']     
-        # for each target length, compute the correct station perc
+        # for each target length, compute the correct word perc
         unique_target_lengths = target_lengths.unique()
         for target_length in unique_target_lengths:
-            target_length_correct_station_perc = torch.mean(extra_metrics['correct_station'][target_lengths == target_length]).detach().item()
-            grouped_correctness[int(target_length.detach().item())] = target_length_correct_station_perc
+            target_length_correct_word_perc = torch.mean(extra_metrics['correct_word'][target_lengths == target_length]).detach().item()
+            grouped_correctness[int(target_length.detach().item())] = target_length_correct_word_perc
 
         if (self.global_steps % 10 == 0) or val:
             # output_df is a dict of lists, append this to a csv file called data/guesses.csv
